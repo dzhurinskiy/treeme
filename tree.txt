@@ -1,0 +1,3 @@
+pythonProject/
+├── treeme.py
+└── usage_examples.txt

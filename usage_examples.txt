@@ -1,0 +1,8 @@
+# Basic
+python treeme.py
+
+# Exclude node_modules and __pycache__, ignore minified files, custom outputs
+python treeme.py --exclude node_modules,__pycache__ --ignore "*.min.js,*.map" --out tree.txt --bundle all_texts.txt
+
+# Custom extensions and root
+python treeme.py --exts ".txt,.md,.py" --root /path/to/project
