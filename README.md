@@ -168,9 +168,7 @@ Issues and PRs are welcome:
 
 ## License
 
-MIT — see `LICENSE`.  
-If you prefer a different license for your repo, update this section accordingly.
-
+MIT
 ---
 
 ## Changelog
