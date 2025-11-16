@@ -4,15 +4,17 @@ Create a directory tree (tree.txt) and concatenate selected files (all_texts.txt
 
 Features:
 - Auto-excludes: .git, .idea, .venv, venv
-- CLI flags for extra excludes, ignore globs, output filenames, root dir, and extensions.
+- CLI flags for extra excludes, ignore globs, output filenames, root dir, extensions,
+  and specific filenames to include.
 
 Usage:
   python make_tree_and_bundle.py \
     --exclude node_modules,__pycache__ \
     --ignore "*.min.js,*.map" \
+    --exts ".txt,.sh,.py,.sql" \
+    --include-names "Dockerfile,README" \
     --out tree.txt \
     --bundle all_texts.txt \
-    --exts ".txt,.sh,.py,.sql" \
     --root .
 
 Notes:
@@ -63,6 +65,7 @@ def build_tree_and_collect_files(
     excludes: Set[str],
     ignore_globs: Set[str],
     allowed_exts: Set[str],
+    include_names: Set[str],  # <--- ADDED
     tree_output: Path,
     bundle_output: Path,
 ) -> List[Path]:
@@ -114,7 +117,8 @@ def build_tree_and_collect_files(
             if p.is_dir():
                 _walk(p, prefix + ("    " if is_last else "│   "))
             else:
-                if p.suffix.lower() in allowed_exts:
+                # <--- MODIFIED THIS BLOCK
+                if p.suffix.lower() in allowed_exts or p.name in include_names:
                     collected.append(p.relative_to(root))
 
     lines.append(root.resolve().name + "/")
@@ -146,6 +150,7 @@ def main():
     ap.add_argument("--exclude", default="", help="Comma-separated folder names to exclude at any depth.")
     ap.add_argument("--ignore", default="", help="Comma-separated glob patterns to ignore (files/dirs). Example: \"*.min.js,*.map,build*\"")
     ap.add_argument("--exts", default=".txt,.sh,.py,.sql", help="Comma-separated file extensions to include in the bundle (with dots).")
+    ap.add_argument("--include-names", default="", help="Comma-separated exact filenames to include (e.g., 'Dockerfile,README').")  # <--- ADDED
     ap.add_argument("--out", dest="tree_out", default="tree.txt", help="Output file for the tree (default: tree.txt).")
     ap.add_argument("--bundle", dest="bundle_out", default="all_texts.txt", help="Output file for the concatenated contents (default: all_texts.txt).")
 
@@ -158,6 +163,7 @@ def main():
     excludes = AUTO_EXCLUDES | parse_csv_set(args.exclude)
     ignore_globs = parse_csv_set(args.ignore)
     allowed_exts = {e.lower() for e in normalized_exts(args.exts)}
+    include_names = parse_csv_set(args.include_names)  # <--- ADDED
 
     print(f"Root: {root}")
     print(f"Tree file: {tree_out}")
@@ -167,12 +173,15 @@ def main():
     print(f"Extra excludes: {', '.join(extra_ex) if extra_ex else '(none)'}")
     print(f"Ignore globs: {', '.join(sorted(ignore_globs)) if ignore_globs else '(none)'}")
     print(f"Extensions: {', '.join(sorted(allowed_exts))}")
+    print_inc_names = sorted(include_names)  # <--- ADDED
+    print(f"Include names: {', '.join(print_inc_names) if print_inc_names else '(none)'}")  # <--- ADDED
 
     collected = build_tree_and_collect_files(
         root=root,
         excludes=excludes,
         ignore_globs=ignore_globs,
         allowed_exts=allowed_exts,
+        include_names=include_names,  # <--- ADDED
         tree_output=tree_out,
         bundle_output=bundle_out,
     )
